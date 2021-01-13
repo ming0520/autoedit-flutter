@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:autoedit/video_player.dart';
+import 'package:autoedit/video_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
