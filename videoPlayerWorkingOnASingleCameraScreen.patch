@@ -1,0 +1,20 @@
+Index: lib/camera_screen.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- lib/camera_screen.dart	(date 1610381889961)
++++ lib/camera_screen.dart	(date 1610381889961)
+@@ -62,9 +62,9 @@
+ //        looping: true,
+ //      );
+ 
+-      final playerWidget = Chewie(
+-        controller: chewieController,
+-      );
++//      final playerWidget = Chewie(
++//        controller: chewieController,
++//      );
+ 
+       setState(() {
+         chewie = Chewie(controller: chewieController);
