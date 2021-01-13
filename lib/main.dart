@@ -7,7 +7,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-//  File video = File('/storage/emulated/0/DCIM/Camera/VID20210111000649.mp4');
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
