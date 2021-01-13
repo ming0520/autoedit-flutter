@@ -90,7 +90,7 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return VideoScreen(video: _video);
+                  return VideoScreen(video: null);
                 }));
               }),
         ],
