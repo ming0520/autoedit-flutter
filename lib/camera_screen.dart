@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:chewie/chewie.dart';
+import 'package:autoedit/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
 
 class CameraScreen extends StatefulWidget {
   static String id = 'camera_screen';
@@ -14,9 +13,6 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   File _video;
   String msg;
-  VideoPlayerController videoPlayerController;
-  ChewieController chewieController;
-  Chewie chewie;
 
   @override
   _record({bool isRecord}) async {
@@ -35,26 +31,10 @@ class _CameraScreenState extends State<CameraScreen> {
         _video = File(video.path);
         msg = _video.path;
       });
-      videoPlayerController = VideoPlayerController.file(_video);
 
-      await videoPlayerController.initialize();
-
-      chewieController = ChewieController(
-          videoPlayerController: videoPlayerController,
-          autoPlay: false,
-          looping: false,
-          autoInitialize: true,
-          errorBuilder: (context, errorMessage) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  errorMessage,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-          });
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return VideoScreen(video: _video);
+      }));
 
 //      chewieController = ChewieController(
 //        videoPlayerController: videoPlayerController,
@@ -66,10 +46,6 @@ class _CameraScreenState extends State<CameraScreen> {
 //        controller: chewieController,
 //      );
 
-      setState(() {
-        chewie = Chewie(controller: chewieController);
-      });
-
 //      GallerySaver.saveVideo(_video.path, albumName: 'AutoEdit')
 //          .then((bool success) {
 //        setState(() {
@@ -77,13 +53,6 @@ class _CameraScreenState extends State<CameraScreen> {
 //        });
 //      });
     }
-  }
-
-  @override
-  void dispose() {
-    chewieController.videoPlayerController.dispose();
-    chewieController.dispose();
-    super.dispose();
   }
 
   Widget build(BuildContext context) {
@@ -95,7 +64,7 @@ class _CameraScreenState extends State<CameraScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-            child: chewie == null ? Text('No video') : chewie,
+            child: Text(msg == null ? 'No video selected!' : msg),
           ),
           RaisedButton(
             child: Center(
@@ -115,6 +84,15 @@ class _CameraScreenState extends State<CameraScreen> {
               _record(isRecord: true);
             },
           ),
+          RaisedButton(
+              child: Center(
+                child: Text('Video Screen'),
+              ),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return VideoScreen(video: _video);
+                }));
+              }),
         ],
       ),
     );

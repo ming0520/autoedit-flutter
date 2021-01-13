@@ -7,6 +7,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+//  File video = File('/storage/emulated/0/DCIM/Camera/VID20210111000649.mp4');
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
+//      home: VideoScreen(video: video),
       home: CameraScreen(),
     );
   }
