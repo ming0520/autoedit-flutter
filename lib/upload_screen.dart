@@ -31,7 +31,7 @@ class Autoedit {
 
 class _UploadScreenState extends State<UploadScreen> {
   File video;
-  Autoedit _autoEdit;
+  Autoedit _autoEdit = new Autoedit();
   String _msg = 'none';
   bool _isRequesting = false;
 
@@ -83,7 +83,7 @@ class _UploadScreenState extends State<UploadScreen> {
           Center(
             child: Container(
               child: Text(
-                _autoEdit == null ? 'Upload place' : _autoEdit.command,
+                _autoEdit.command == null ? 'Upload place' : _autoEdit.command,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 3,
               ),
@@ -105,7 +105,7 @@ class _UploadScreenState extends State<UploadScreen> {
             child: Text('Reset'),
             onPressed: () {
               setState(() {
-                _autoEdit.command = "";
+                _autoEdit = Autoedit();
                 _isRequesting = false;
                 _msg = 'none';
               });
