@@ -54,10 +54,10 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoScreen extends StatefulWidget {
-  @override
-  File video;
+  final File video;
 
-  VideoScreen({@required File this.video});
+  @override
+  VideoScreen({@required this.video});
   _VideoScreenState createState() => _VideoScreenState();
 }
 
