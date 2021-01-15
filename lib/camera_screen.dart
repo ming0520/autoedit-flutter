@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:autoedit/upload_screen.dart';
 import 'package:autoedit/video_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,7 +15,6 @@ class _CameraScreenState extends State<CameraScreen> {
   File _video;
   String msg;
 
-  @override
   _record({bool isRecord}) async {
     ImageSource imgSrc;
     if (isRecord) {
@@ -55,10 +55,11 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Auto Edit'),
+        title: Text('Camera Screen'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -93,6 +94,18 @@ class _CameraScreenState extends State<CameraScreen> {
                   return VideoScreen(video: null);
                 }));
               }),
+          RaisedButton(
+            child: Center(
+              child: Text('Upload Screen'),
+            ),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return UploadScreen(
+                  video: _video,
+                );
+              }));
+            },
+          )
         ],
       ),
     );
