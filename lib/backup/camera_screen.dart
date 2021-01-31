@@ -18,7 +18,6 @@ class _CameraScreenState extends State<CameraScreen> {
   ChewieController chewieController;
   Chewie chewie;
 
-  @override
   _record({bool isRecord}) async {
     ImageSource imgSrc;
     if (isRecord) {

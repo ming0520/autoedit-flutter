@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:autoedit/upload_screen.dart';
 import 'package:autoedit/video_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -31,6 +32,19 @@ class _CameraScreenState extends State<CameraScreen> {
         _video = File(video.path);
         msg = _video.path;
       });
+      print('=================================================');
+      print("File path: ${_video.path}");
+      print('=================================================');
+
+      if (isRecord) {
+//        AlbumSaver.createAlbum(albumName: "AutoEdit");
+        GallerySaver.saveVideo(video.path, albumName: 'AutoEdit')
+            .then((bool success) {
+          setState(() {
+            msg = 'video saved';
+          });
+        });
+      }
 
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return VideoScreen(video: _video);
@@ -91,7 +105,7 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return VideoScreen(video: null);
+                  return VideoScreen(video: File(_video.path));
                 }));
               }),
           RaisedButton(
@@ -101,7 +115,7 @@ class _CameraScreenState extends State<CameraScreen> {
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
                 return UploadScreen(
-                  video: _video,
+                  video: File(_video.path),
                 );
               }));
             },

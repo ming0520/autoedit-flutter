@@ -34,7 +34,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.zhongming.autoedit"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -51,8 +51,20 @@ android {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
+    ext {
+        flutterFFmpegPackage  = "full-gpl-lts"
+    }
+
+}
+ext {
+    flutterFFmpegPackage  = "full-gpl-lts"
 }
 
+
 flutter {
+    ext {
+        flutterFFmpegPackage  = "full-gpl-lts"
+    }
     source '../..'
+
 }
