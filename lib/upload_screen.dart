@@ -90,8 +90,9 @@ class Autoedit {
   Future<void> convertToWav() async {
     final arguments = '-y -i ' +
         video.path +
-        ' -c:a pcm_s16le' +
-        ' -b:a 8000 -ac 1 -ar 8000 -vn ' +
+        // ' -c:a pcm_s16le' +
+        ' -acodec libmp3lame' +
+        ' -b:a 16k -ac 1 -ar 16k -vn ' +
         outAudioDirPath;
 
 //    final arguments = '-y -i ' +
@@ -208,8 +209,15 @@ class _UploadScreenState extends State<UploadScreen> {
 
     await request.send().then((response) {
       if (response.statusCode == 200) {
-        response.stream.transform(utf8.decoder).listen((value) {
+        response.stream.transform(utf8.decoder).listen((value) async {
           _autoEdit.command = value.toString();
+          setState(() {
+            _msg = 'Rendering in API';
+          });
+          await _autoEdit.renderVideo();
+          setState(() {
+            _msg = 'Saved to' + _autoEdit.outVideoDirPath;
+          });
         });
       }
     });
@@ -279,7 +287,7 @@ class _UploadScreenState extends State<UploadScreen> {
           '===============================Converted to wav =============================');
     });
     await getAPI();
-    await renderVideo();
+    // await renderVideo();
   }
 
   Future<void> renderVideo() async {
