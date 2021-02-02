@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart';
 
 const demo = 'http://35.247.153.68/demo/';
 
@@ -128,6 +129,7 @@ class _UploadScreenState extends State<UploadScreen> {
   File video;
   Autoedit _autoEdit;
   String _msg = 'none';
+  int _progress = 0;
   bool _isRequesting = false;
 //  final uploader = FlutterUploader();
 
@@ -189,77 +191,74 @@ class _UploadScreenState extends State<UploadScreen> {
 
 //  not working perfectly
 
-  Future<dynamic> getAPI() async {
-    print(
-        '===============================Requesting API =============================');
-    print('API: Initializing ...');
-    var postUri = Uri.parse('http://35.247.153.68/api/');
-    var request = new http.MultipartRequest('POST', postUri);
-    print('API: Adding file ...');
-    setState(() {
-      _msg = 'Adding file...';
-    });
-    request.files.add(await http.MultipartFile.fromPath(
-        'file', _autoEdit.outAudioDirPath,
-        contentType: new MediaType('media', 'wav')));
-    setState(() {
-      _msg = 'Uploading...';
-    });
-    print('API: Uploading ...');
+  // Future<dynamic> getAPI() async {
+  //   print(
+  //       '===============================Requesting API =============================');
+  //   print('API: Initializing ...');
+  //   var postUri = Uri.parse('http://35.247.153.68/api/');
+  //   var request = new http.MultipartRequest('POST', postUri);
+  //   print('API: Adding file ...');
+  //   setState(() {
+  //     _msg = 'Adding file...';
+  //   });
+  //   request.files.add(await http.MultipartFile.fromPath(
+  //       'file', _autoEdit.outAudioDirPath,
+  //       contentType: new MediaType('media', 'wav')));
+  //   setState(() {
+  //     _msg = 'Uploading...';
+  //   });
+  //   print('API: Uploading ...');
+  //
+  //   await request.send().then((response) {
+  //     if (response.statusCode == 200) {
+  //       response.stream.transform(utf8.decoder).listen((value) async {
+  //         _autoEdit.command = value.toString();
+  //         setState(() {
+  //           _msg = 'Rendering in API';
+  //         });
+  //         await _autoEdit.renderVideo();
+  //         setState(() {
+  //           _msg = 'Saved to' + _autoEdit.outVideoDirPath;
+  //         });
+  //       });
+  //     }
+  //   });
+  //   print(
+  //       '===============================Requested API =============================');
+  // }
 
-    await request.send().then((response) {
-      if (response.statusCode == 200) {
-        response.stream.transform(utf8.decoder).listen((value) async {
-          _autoEdit.command = value.toString();
-          setState(() {
-            _msg = 'Rendering in API';
-          });
-          await _autoEdit.renderVideo();
-          setState(() {
-            _msg = 'Saved to' + _autoEdit.outVideoDirPath;
-          });
-        });
-      }
+  //Dio
+  Future<void> getAPI() async {
+    Dio dio = new Dio();
+    // String filename = _autoEdit.video.path.split('/').last;
+    FormData formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(_autoEdit.outAudioDirPath,
+          filename: 'upload.wav'),
     });
-//    var response = await request.send();
-//    setState(() {
-//      _msg = 'Uploded';
-//    });
-//    print('API: Status ${response.statusCode}');
-//    response.stream.transform(utf8.decoder).listen((value) {
-////      logLongString(value.toString());
-//      _autoEdit.command = value.toString();
-//      return value.toString();
-//    });
-
-    print(
-        '===============================Requested API =============================');
+    try {
+      setState(() {
+        _msg = 'Requesting ...';
+      });
+      var response =
+          await dio.post('http://35.247.153.68/api/', data: formData);
+      setState(() {
+        _msg = 'Responsed!';
+      });
+      print('===================data to string===========================');
+      // logLongString(response.data);
+      setState(() {
+        _msg = 'Rendering...';
+      });
+      _autoEdit.command = response.data.toString();
+      await _autoEdit.renderVideo();
+      setState(() {
+        _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
+      });
+      print('==================end data to string========================');
+    } catch (e) {
+      print(e);
+    }
   }
-
-//  Future<void> getAPI() async {
-//    Dio dio = new Dio();
-//    dio.options.baseUrl = 'http://35.247.153.68/api/';
-//    FormData frm
-//
-//  }
-
-//  Future<void> getAPI() async {
-//    Dio dio = new Dio();
-//    String filename = _autoEdit.video.path.split('/').last;
-//    FormData formData = FormData.fromMap({
-//      'file': await MultipartFile.fromFile(_autoEdit.outAudioDirPath,
-//          filename: filename),
-//    });
-//    try {
-//      var response =
-//          await dio.post('http://35.247.153.68/api/', data: formData);
-//      print('===================data to string===========================');
-//      logLongString(response.data);
-//      print('==================end data to string========================');
-//    } catch (e) {
-//      print(e);
-//    }
-//  }
 
   Future<void> getDemoBtn() async {
     setState(() {
@@ -290,20 +289,6 @@ class _UploadScreenState extends State<UploadScreen> {
     // await renderVideo();
   }
 
-  Future<void> renderVideo() async {
-    setState(() {
-      _msg = 'Rendering video';
-    });
-    print(
-        '===============================Rendering video =============================');
-    await _autoEdit.renderVideo();
-    setState(() {
-      _msg = 'Saved video to ${_autoEdit.outVideoDirPath}';
-      print(
-          '===============================Rendered video =============================');
-    });
-  }
-
   printCommand() {
     logLongString(_autoEdit.command);
   }
@@ -318,36 +303,36 @@ class _UploadScreenState extends State<UploadScreen> {
       appBar: AppBar(
         title: Text('Upload Screen'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: new Column(
+        // mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(
-            child: Container(
-              child: Text(
-                _autoEdit == null
-                    ? 'Nothing'
-                    : _autoEdit.command == null
-                        ? 'Nothing'
-                        : _autoEdit.command,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 3,
+          Expanded(
+            child: Center(
+              child: Container(
+                child: SingleChildScrollView(
+                  child: Column(children: [
+                    Text(
+                      _autoEdit == null
+                          ? 'Nothing'
+                          : _autoEdit.command == null
+                              ? 'Nothing'
+                              : _autoEdit.command,
+                      // overflow: TextOverflow.ellipsis,
+                      // maxLines: 5,
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Center(
+                      child: Text("File: ${widget.video.path}"),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                  ]),
+                ),
               ),
             ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Center(
-            child: Text("Status: ${_msg}"),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Center(
-            child: Text("File: ${widget.video.path}"),
-          ),
-          SizedBox(
-            height: 20,
           ),
           Column(
             children: [
@@ -361,6 +346,15 @@ class _UploadScreenState extends State<UploadScreen> {
               Center(
                 child: Text(
                     "Output: ${_autoEdit == null ? 'No' : _autoEdit.outAudioDirPath}"),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Center(
+                child: Text("Status: ${_msg}"),
+              ),
+              Center(
+                child: Text("Progress: ${_progress}"),
               ),
               RaisedButton(
                 child: Text('Get Demo Command'),
