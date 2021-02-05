@@ -50,8 +50,10 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+//import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:video_player/video_player.dart';
+
+import 'constant.dart';
 
 class VideoScreen extends StatefulWidget {
   final File video;
@@ -113,12 +115,6 @@ class _VideoScreenState extends State<VideoScreen> {
         child: Text('No video selected !'),
       );
     }
-
-    final spinkit = SpinKitDualRing(
-      color: Colors.blue,
-      size: 100.0,
-    );
-
 //    final spinkit = SpinKitRing(
 //      color: Colors.blue,
 //    );
@@ -136,7 +132,7 @@ class _VideoScreenState extends State<VideoScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          spinkit,
+          SPINKIT,
           SizedBox(
             height: 30.0,
           ),
