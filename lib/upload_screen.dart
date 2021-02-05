@@ -8,6 +8,9 @@ import 'package:flutter_ffmpeg/media_information.dart';
 import 'package:flutter_ffmpeg/statistics.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
+
+import 'constant.dart';
 
 const demo = 'http://35.247.153.68/demo/';
 
@@ -126,9 +129,12 @@ class _UploadScreenState extends State<UploadScreen> {
     super.initState();
     _autoEdit = Autoedit(video: widget.video);
     setState(() {
-      _msg = 'Getting directory';
+      _msg = 'Getting directory ...';
     });
     _autoEdit.getDir();
+    setState(() {
+      _msg = 'Prepared directory';
+    });
     _config.enableStatisticsCallback(this.statisticsCallback);
     _cancelDio = new CancelToken();
   }
@@ -139,6 +145,7 @@ class _UploadScreenState extends State<UploadScreen> {
   String _msg = 'none';
   double _progress = 0;
   int _time = 0;
+  bool _serverProcessing = false;
 //  final uploader = FlutterUploader();
 
   static final FlutterFFmpeg _encoder = FlutterFFmpeg();
@@ -269,6 +276,7 @@ class _UploadScreenState extends State<UploadScreen> {
           _progress = result;
           if (_progress == 100.0) {
             _msg = 'Server processing...';
+            _serverProcessing = true;
           }
         });
 //      }, onReceiveProgress: (int rcv, int total) {
@@ -287,6 +295,7 @@ class _UploadScreenState extends State<UploadScreen> {
       // logLongString(response.data);
       _autoEdit.command = response.data.toString();
       setState(() {
+        _serverProcessing = false;
         _progress = 0.0;
         _msg = 'Rendering...';
         _time = 0;
@@ -294,7 +303,8 @@ class _UploadScreenState extends State<UploadScreen> {
       String arguments = _autoEdit.renderVideo();
       await _encoder.execute(arguments);
       setState(() {
-        _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
+//        _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
+        _msg = 'Done ! ';
       });
       print('==================end data to string========================');
     } catch (e) {
@@ -304,7 +314,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
   Future<void> getDemoBtn() async {
     setState(() {
-      _msg = 'Converting to wav ... ';
+      _msg = 'Converting to audio ... ';
     });
     String arguments = _autoEdit.convertToWav();
     await _encoder.execute(arguments);
@@ -318,7 +328,7 @@ class _UploadScreenState extends State<UploadScreen> {
 //      print('Status code: ${_autoEdit.response.statusCode}');
 //      logLongString(autoEdit.command);
 //      print('Body: ${autoEdit.command}');
-      _msg = 'Converted to wav';
+      _msg = 'Converted to audio';
       print(
           '===============================Converted to wav =============================');
     });
@@ -348,64 +358,100 @@ class _UploadScreenState extends State<UploadScreen> {
         title: Text('Upload Screen'),
       ),
       body: new Column(
-        // mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Center(
-              child: Container(
-                child: SingleChildScrollView(
-                  child: Column(children: [
-                    Text(
-                      _autoEdit == null
-                          ? 'Nothing'
-                          : _autoEdit.command == null
-                              ? 'Nothing'
-                              : _autoEdit.command,
-                      // overflow: TextOverflow.ellipsis,
-                      // maxLines: 5,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Center(
-                      child: Text("File: ${widget.video.path}"),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                  ]),
-                ),
-              ),
-            ),
-          ),
+//          Expanded(
+//            child: Center(
+//              child: Container(
+//                child: SingleChildScrollView(
+//                  child: Column(children: [
+//                    Text(
+//                      _autoEdit == null
+//                          ? 'Nothing'
+//                          : _autoEdit.command == null
+//                              ? 'Nothing'
+//                              : _autoEdit.command,
+//                      // overflow: TextOverflow.ellipsis,
+//                      // maxLines: 5,
+//                    ),
+//                    SizedBox(
+//                      height: 20,
+//                    ),
+//                    Center(
+//                      child: Text("File: ${widget.video.path}"),
+//                    ),
+//                    SizedBox(
+//                      height: 20,
+//                    ),
+//                  ]),
+//                ),
+//              ),
+//            ),
+//          ),
           Column(
             children: [
-              Center(
-                child: Text(
-                    "Duration: ${_autoEdit == null ? 0 : _autoEdit.duration}"),
-              ),
-              Center(
-                child: Text("FPS: ${_autoEdit == null ? 0 : _autoEdit.fps}"),
-              ),
-              Center(
-                child: Text(
-                    "Output: ${_autoEdit == null ? 'No' : _autoEdit.outAudioDirPath}"),
-              ),
+//              Center(
+//                child: Text(
+//                    "Duration: ${_autoEdit == null ? 0 : _autoEdit.duration}"),
+//              ),
+//              Center(
+//                child: Text("FPS: ${_autoEdit == null ? 0 : _autoEdit.fps}"),
+//              ),
+//              Center(
+//                child: Text(
+//                    "Output: ${_autoEdit == null ? 'No' : _autoEdit.outAudioDirPath}"),
+//              ),
+//              SizedBox(
+//                height: 20,
+//              ),
+//              Center(
+//                child: Text("Status: $_msg"),
+//              ),
+//              Center(
+//                child: Text("Progress: $_progress"),
+//              ),
+//              Center(
+//                child: Text(_autoEdit == null
+//                    ? '0'
+//                    : _autoEdit.duration == null
+//                        ? '0'
+//                        : "Time(ms):  $_time/${_autoEdit.duration * 1000}"),
+//              ),
+//              CircularProgressIndicator(
+//                backgroundColor: Colors.grey,
+//                strokeWidth: 2,
+//                value: _progress,
+//              ),
+              _serverProcessing
+                  ? Container(
+                      child: SPINKIT,
+                    )
+                  : new CircularPercentIndicator(
+                      radius: 200.0,
+                      lineWidth: 13.0,
+                      percent:
+                          ((_progress / 100) > 1.0 ? 1.0 : _progress / 100),
+                      center: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          new Text('$_progress %'),
+                          new Text(_autoEdit == null
+                              ? '0 / 0'
+                              : _autoEdit.duration == null
+                                  ? '0 / 0 '
+                                  : '$_time / ${(_autoEdit.duration * 1000)}'),
+                        ],
+                      ),
+                      progressColor: Colors.green,
+                    ),
               SizedBox(
                 height: 20,
               ),
-              Center(
-                child: Text("Status: $_msg"),
-              ),
-              Center(
-                child: Text("Progress: $_progress"),
-              ),
-              Center(
-                child: Text(_autoEdit == null
-                    ? '0'
-                    : _autoEdit.duration == null
-                        ? '0'
-                        : "Time(ms):  $_time/${_autoEdit.duration * 1000}"),
+              new Text('Status: $_msg'),
+              SizedBox(
+                height: 20,
               ),
               RaisedButton(
                 child: Text('Get Demo Command'),
@@ -414,37 +460,47 @@ class _UploadScreenState extends State<UploadScreen> {
                 },
               ),
               RaisedButton(
-                child: Text('Reset'),
+                child: Text('Indicator'),
                 onPressed: () {
                   setState(() {
-                    _autoEdit = null;
-                    _msg = 'none';
-                    _progress = 0.0;
+                    _serverProcessing = !_serverProcessing;
                   });
                 },
               ),
+//              RaisedButton(
+//                child: Text('Reset'),
+//                onPressed: () {
+//                  setState(() {
+//                    _autoEdit = null;
+//                    _msg = 'none';
+//                    _progress = 0.0;
+//                  });
+//                },
+//              ),
+//              RaisedButton(
+//                child: Text('Command'),
+//                onPressed: () {
+//                  printCommand();
+//                },
+//              ),
+//              RaisedButton(
+//                child: Text('Argument'),
+//                onPressed: () {
+//                  printArguments();
+//                },
+//              ),
               RaisedButton(
-                child: Text('Command'),
-                onPressed: () {
-                  printCommand();
-                },
-              ),
-              RaisedButton(
-                child: Text('Argument'),
-                onPressed: () {
-                  printArguments();
-                },
-              ),
-              RaisedButton(
-                child:
-                    Text(_cancelDio.isCancelled ? 'Reset token' : 'Cancel Dio'),
+                child: Text(_cancelDio.isCancelled ? 'Reset token' : 'Cancel'),
                 onPressed: () {
                   setState(() {
+                    _progress = 0.0;
                     if (_cancelDio.isCancelled) {
                       _cancelDio = new CancelToken();
                     } else {
                       _cancelDio.cancel('cancelled');
                     }
+                    _cancelDio = new CancelToken();
+                    _encoder.cancel();
                   });
                 },
               ),
