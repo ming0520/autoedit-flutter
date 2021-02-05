@@ -29,9 +29,10 @@ dependencies:
   video_player: ^1.0.1
   gallery_saver: ^2.0.1
   flutter_ffmpeg: ^0.3.0
-  path:
+  path: ^1.7.0
   dio: ^3.0.10
-  path_provider:
+  path_provider: ^1.6.27
+  percent_indicator: ^2.1.9+1
 #  # Latest not working, it will return mp4 as jpg
 #  # Problem link: https://github.com/flutter/flutter/issues/52419
 #  image_picker: ^0.6.7+21
