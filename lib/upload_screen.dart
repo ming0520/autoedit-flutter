@@ -1,16 +1,13 @@
 //import 'dart:html';
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:flutter_ffmpeg/media_information.dart';
-//import 'package:flutter_uploader/flutter_uploader.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+import 'package:flutter_ffmpeg/statistics.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:dio/dio.dart';
 
 const demo = 'http://35.247.153.68/demo/';
 
@@ -26,9 +23,6 @@ class UploadScreen extends StatefulWidget {
 class Autoedit {
   File video;
   var command;
-  var arguments;
-  http.Response response;
-
   Directory extDir;
   String outAudioDirPath;
   String outVideoDirPath;
@@ -37,10 +31,10 @@ class Autoedit {
   var duration;
   var fps;
 
-  static final FlutterFFmpeg _ffmpeg = FlutterFFmpeg(); // encoder
+//  static final FlutterFFmpeg _ffmpeg = FlutterFFmpeg(); // encoder
   static final FlutterFFprobe _ffprobe = FlutterFFprobe(); //probe
-  static final FlutterFFmpegConfig _ffmpegConfig =
-      FlutterFFmpegConfig(); //config
+//  static final FlutterFFmpegConfig _ffmpegConfig =
+//      FlutterFFmpegConfig(); //config
 
   Autoedit({@required this.video});
 
@@ -61,77 +55,97 @@ class Autoedit {
   }
 
   String getArguments() {
-    this.arguments =
-        '-y -i ' + video.path + ' ' + command + " " + outVideoDirPath;
-    return this.arguments;
-  }
-
-  Future<void> getDemo() async {
-    response = await http.get(demo);
-    if (response.statusCode == 200) {
-      command = response.body;
-    } else {
-      print(response.statusCode);
-    }
-  }
-
-  void logLongString(String s) {
-    if (s == null || s.length <= 0) return;
-    const int n = 1000;
-    int startIndex = 0;
-    int endIndex = n;
-    while (startIndex < s.length) {
-      if (endIndex > s.length) endIndex = s.length;
-      print(s.substring(startIndex, endIndex));
-      startIndex += n;
-      endIndex = startIndex + n;
-    }
-  }
-
-  Future<void> convertToWav() async {
-    final arguments = '-y -i ' +
+    String arguments = '-y -i ' +
         video.path +
-        // ' -c:a pcm_s16le' +
+//        ' -c:a pcm_s16le' +
         ' -acodec libmp3lame' +
         ' -b:a 16k -ac 1 -ar 16k -vn ' +
         outAudioDirPath;
-
-//    final arguments = '-y -i ' +
-//        video.path +
-//        '-acodec libmp3lame' +
-//        ' -b:a 16k -ac 1 -ar 16000 -vn ' +
-//        outAudioDirPath;
-    print('=======================Arguments====================');
-    print(arguments);
-    final int rc = await _ffmpeg.execute(arguments.toString());
-    assert(rc == 0);
-    print('outputDir: $outAudioDirPath');
-    print('====================================================');
+    return arguments;
   }
 
-  Future<void> renderVideo() async {
-    final arguments =
+  String convertToWav() {
+    String arguments = '-y -i ' +
+        video.path +
+//        ' -c:a pcm_s16le' +
+        ' -acodec libmp3lame' +
+        ' -b:a 16k -ac 1 -ar 16k -vn ' +
+        outAudioDirPath;
+    return arguments;
+
+////    final arguments = '-y -i ' +
+////        video.path +
+////        '-acodec libmp3lame' +
+////        ' -b:a 16k -ac 1 -ar 16000 -vn ' +
+////        outAudioDirPath;
+//    print('=======================Arguments====================');
+//    print(arguments);
+//    final int rc = await _ffmpeg.execute(arguments.toString());
+//    assert(rc == 0);
+//    print('outputDir: $outAudioDirPath');
+//    print('====================================================');
+  }
+
+  String renderVideo() {
+    String arguments =
         '-y -i ' + video.path + ' ' + command + " " + outVideoDirPath;
+    return arguments;
 //    this.arguments =
 //        '-y -i ' + video.path + ' ' + command + " " + outVideoDirPath;
-    print('=======================Arguments====================');
-//    logLongString(arguments);
-    print("Rendering: Start to execute arguments...");
-    final int rc = await _ffmpeg.execute(arguments);
-    assert(rc == 0);
-    print("Rendering: Finish execute arguments...");
-    print('outputDir: $outVideoDirPath');
-    print('====================================================');
+//    print('=======================Arguments====================');
+////    logLongString(arguments);
+//    print("Rendering: Start to execute arguments...");
+//    final int rc = await _ffmpeg.execute(arguments);
+//    assert(rc == 0);
+//    print("Rendering: Finish execute arguments...");
+//    print('outputDir: $outVideoDirPath');
+//    print('====================================================');
   }
 }
 
 class _UploadScreenState extends State<UploadScreen> {
+  @override
+  void setState(fn) {
+    if (this.mounted) {
+      super.setState(fn);
+    }
+  }
+
+  void statisticsCallback(Statistics statistics) {
+    var result = (statistics.time / 1000) / (_autoEdit.duration) * 100;
+    setState(() {
+      _progress = result;
+      _time = statistics.time;
+    });
+    print(
+        "Statistics: executionId: ${statistics.executionId}, time: ${statistics.time}, size: ${statistics.size}, bitrate: ${statistics.bitrate}, speed: ${statistics.speed}, videoFrameNumber: ${statistics.videoFrameNumber}, videoQuality: ${statistics.videoQuality}, videoFps: ${statistics.videoFps}");
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _autoEdit = Autoedit(video: widget.video);
+    setState(() {
+      _msg = 'Getting directory';
+    });
+    _autoEdit.getDir();
+    _config.enableStatisticsCallback(this.statisticsCallback);
+    _cancelDio = new CancelToken();
+  }
+
+  CancelToken _cancelDio = new CancelToken();
   File video;
   Autoedit _autoEdit;
   String _msg = 'none';
-  int _progress = 0;
-  bool _isRequesting = false;
+  double _progress = 0;
+  int _time = 0;
 //  final uploader = FlutterUploader();
+
+  static final FlutterFFmpeg _encoder = FlutterFFmpeg();
+//  static final FlutterFFprobe _probe = FlutterFFprobe();
+  static final FlutterFFmpegConfig _config = FlutterFFmpegConfig();
+
+  Dio dio = new Dio();
 
   _UploadScreenState({this.video});
 
@@ -182,54 +196,61 @@ class _UploadScreenState extends State<UploadScreen> {
 //          });
 //        })
 //        .catchError((err) => print('callApi: error : ' + err.toString()))
-//        .whenComplete(() {});
+//        .whenComplete(() async {
+//          setState(() {
+//            _msg = 'Rendering';
+//          });
+//          await _autoEdit.renderVideo();
+//          setState(() {
+//            _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
+//          });
+//        });
 //    setState(() {
 //      _isRequesting = false;
 //    });
 //  }
-//
 
 //  not working perfectly
 
-  // Future<dynamic> getAPI() async {
-  //   print(
-  //       '===============================Requesting API =============================');
-  //   print('API: Initializing ...');
-  //   var postUri = Uri.parse('http://35.247.153.68/api/');
-  //   var request = new http.MultipartRequest('POST', postUri);
-  //   print('API: Adding file ...');
-  //   setState(() {
-  //     _msg = 'Adding file...';
-  //   });
-  //   request.files.add(await http.MultipartFile.fromPath(
-  //       'file', _autoEdit.outAudioDirPath,
-  //       contentType: new MediaType('media', 'wav')));
-  //   setState(() {
-  //     _msg = 'Uploading...';
-  //   });
-  //   print('API: Uploading ...');
-  //
-  //   await request.send().then((response) {
-  //     if (response.statusCode == 200) {
-  //       response.stream.transform(utf8.decoder).listen((value) async {
-  //         _autoEdit.command = value.toString();
-  //         setState(() {
-  //           _msg = 'Rendering in API';
-  //         });
-  //         await _autoEdit.renderVideo();
-  //         setState(() {
-  //           _msg = 'Saved to' + _autoEdit.outVideoDirPath;
-  //         });
-  //       });
-  //     }
-  //   });
-  //   print(
-  //       '===============================Requested API =============================');
-  // }
+//  Future<dynamic> getAPI() async {
+//    print(
+//        '===============================Requesting API =============================');
+//    print('API: Initializing ...');
+//    var postUri = Uri.parse('http://35.247.153.68/api/');
+//    var request = new http.MultipartRequest('POST', postUri);
+//    print('API: Adding file ...');
+//    setState(() {
+//      _msg = 'Adding file...';
+//    });
+//    request.files.add(await http.MultipartFile.fromPath(
+//        'file', _autoEdit.outAudioDirPath,
+//        contentType: new MediaType('media', 'wav')));
+//    setState(() {
+//      _msg = 'Uploading...';
+//    });
+//    print('API: Uploading ...');
+//
+//    await request.send().then((response) {
+//      if (response.statusCode == 200) {
+//        response.stream.transform(utf8.decoder).listen((value) async {
+//          _autoEdit.command = value.toString();
+//        });
+//      }
+//    }).whenComplete(() async {
+//      setState(() {
+//        _msg = 'Rendering in API';
+//      });
+//      await _autoEdit.renderVideo();
+//      setState(() {
+//        _msg = 'Saved to' + _autoEdit.outVideoDirPath;
+//      });
+//    });
+//    print(
+//        '===============================Requested API =============================');
+//  }
 
   //Dio
   Future<void> getAPI() async {
-    Dio dio = new Dio();
     // String filename = _autoEdit.video.path.split('/').last;
     FormData formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(_autoEdit.outAudioDirPath,
@@ -237,20 +258,41 @@ class _UploadScreenState extends State<UploadScreen> {
     });
     try {
       setState(() {
-        _msg = 'Requesting ...';
+        _msg = 'Sending ...';
       });
-      var response =
-          await dio.post('http://35.247.153.68/api/', data: formData);
-      setState(() {
-        _msg = 'Responsed!';
+      var response = await dio.post('http://35.247.153.68/api/',
+          data: formData,
+          cancelToken: _cancelDio, onSendProgress: (int sent, int total) {
+        var result = (sent / total) * 100;
+        print('Sending $sent/$total, $result');
+        setState(() {
+          _progress = result;
+          if (_progress == 100.0) {
+            _msg = 'Server processing...';
+          }
+        });
+//      }, onReceiveProgress: (int rcv, int total) {
+//        setState(() {
+//          _msg = 'Downloading ...';
+//          var result = (rcv / total) * 100;
+//          _progress = result;
+//        });
+      }).catchError((e) {
+        if (_cancelDio.isCancelled) {
+          print('$e');
+        }
       });
+
       print('===================data to string===========================');
       // logLongString(response.data);
-      setState(() {
-        _msg = 'Rendering...';
-      });
       _autoEdit.command = response.data.toString();
-      await _autoEdit.renderVideo();
+      setState(() {
+        _progress = 0.0;
+        _msg = 'Rendering...';
+        _time = 0;
+      });
+      String arguments = _autoEdit.renderVideo();
+      await _encoder.execute(arguments);
       setState(() {
         _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
       });
@@ -262,17 +304,13 @@ class _UploadScreenState extends State<UploadScreen> {
 
   Future<void> getDemoBtn() async {
     setState(() {
-//      _isRequesting = true;
-      _msg = 'Getting directory';
+      _msg = 'Converting to wav ... ';
     });
-    _autoEdit = Autoedit(video: widget.video);
-//    await _autoEdit.getDemo();
-    await _autoEdit.getDir();
-    setState(() {
-      _msg = 'Converting to wav';
-//      _autoEdit = autoEdit;
-    });
-    await _autoEdit.convertToWav();
+    String arguments = _autoEdit.convertToWav();
+    await _encoder.execute(arguments);
+//    await _encoder.executeAsync(arguments, (executionId, returnCode) {
+//      print('Return code: $returnCode');
+//    });
     setState(() {
       print(
           '===============================Converting to wav =============================');
@@ -280,7 +318,6 @@ class _UploadScreenState extends State<UploadScreen> {
 //      print('Status code: ${_autoEdit.response.statusCode}');
 //      logLongString(autoEdit.command);
 //      print('Body: ${autoEdit.command}');
-      _isRequesting = false;
       _msg = 'Converted to wav';
       print(
           '===============================Converted to wav =============================');
@@ -300,7 +337,14 @@ class _UploadScreenState extends State<UploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: new AppBar(
+        leading: new IconButton(
+            icon: new Icon(Icons.arrow_back),
+            onPressed: () {
+              _encoder.cancel();
+              _cancelDio.cancel('cancelled');
+              Navigator.pop(context, true);
+            }),
         title: Text('Upload Screen'),
       ),
       body: new Column(
@@ -351,10 +395,17 @@ class _UploadScreenState extends State<UploadScreen> {
                 height: 20,
               ),
               Center(
-                child: Text("Status: ${_msg}"),
+                child: Text("Status: $_msg"),
               ),
               Center(
-                child: Text("Progress: ${_progress}"),
+                child: Text("Progress: $_progress"),
+              ),
+              Center(
+                child: Text(_autoEdit == null
+                    ? '0'
+                    : _autoEdit.duration == null
+                        ? '0'
+                        : "Time(ms):  $_time/${_autoEdit.duration * 1000}"),
               ),
               RaisedButton(
                 child: Text('Get Demo Command'),
@@ -367,8 +418,8 @@ class _UploadScreenState extends State<UploadScreen> {
                 onPressed: () {
                   setState(() {
                     _autoEdit = null;
-                    _isRequesting = false;
                     _msg = 'none';
+                    _progress = 0.0;
                   });
                 },
               ),
@@ -385,9 +436,16 @@ class _UploadScreenState extends State<UploadScreen> {
                 },
               ),
               RaisedButton(
-                child: Text('Render'),
+                child:
+                    Text(_cancelDio.isCancelled ? 'Reset token' : 'Cancel Dio'),
                 onPressed: () {
-                  _autoEdit.renderVideo();
+                  setState(() {
+                    if (_cancelDio.isCancelled) {
+                      _cancelDio = new CancelToken();
+                    } else {
+                      _cancelDio.cancel('cancelled');
+                    }
+                  });
                 },
               ),
             ],
