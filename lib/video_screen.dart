@@ -54,6 +54,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import 'constant.dart';
+import 'upload_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   final File video;
@@ -68,6 +69,7 @@ class _VideoScreenState extends State<VideoScreen> {
   VideoPlayerController videoPlayerController;
   ChewieController chewieController;
   Chewie chewie;
+  bool _newVideo = false;
 
   void initState() {
     this.video = widget.video;
@@ -107,6 +109,21 @@ class _VideoScreenState extends State<VideoScreen> {
     chewieController.videoPlayerController.dispose();
     chewieController.dispose();
     super.dispose();
+  }
+
+  _uploadScreen() async {
+    File newVideo =
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return UploadScreen(
+        video: File(widget.video.path),
+      );
+    }));
+    setState(() {
+      if (newVideo.path != video.path) {
+        _newVideo = true;
+      }
+      _loadVideo(newVideo);
+    });
   }
 
   Widget _displayLoading() {
@@ -154,6 +171,11 @@ class _VideoScreenState extends State<VideoScreen> {
           Expanded(
             child: chewie == null ? _displayLoading() : chewie,
           ),
+          RaisedButton(
+              child: Text('Ok'),
+              onPressed: () {
+                _uploadScreen();
+              }),
         ],
       ),
     );
