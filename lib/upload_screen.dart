@@ -124,21 +124,6 @@ class _UploadScreenState extends State<UploadScreen> {
         "Statistics: executionId: ${statistics.executionId}, time: ${statistics.time}, size: ${statistics.size}, bitrate: ${statistics.bitrate}, speed: ${statistics.speed}, videoFrameNumber: ${statistics.videoFrameNumber}, videoQuality: ${statistics.videoQuality}, videoFps: ${statistics.videoFps}");
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _autoEdit = Autoedit(video: widget.video);
-    setState(() {
-      _msg = 'Getting directory ...';
-    });
-    _autoEdit.getDir();
-    setState(() {
-      _msg = 'Prepared directory';
-    });
-    _config.enableStatisticsCallback(this.statisticsCallback);
-    _cancelDio = new CancelToken();
-  }
-
   CancelToken _cancelDio = new CancelToken();
   File video;
   Autoedit _autoEdit;
@@ -312,7 +297,7 @@ class _UploadScreenState extends State<UploadScreen> {
     }
   }
 
-  Future<void> getDemoBtn() async {
+  Future<void> startProcess() async {
     setState(() {
       _msg = 'Converting to audio ... ';
     });
@@ -334,6 +319,11 @@ class _UploadScreenState extends State<UploadScreen> {
     });
     await getAPI();
     // await renderVideo();
+    if (await File(_autoEdit.outVideoDirPath).exists()) {
+      Navigator.pop(context, File(_autoEdit.outVideoDirPath));
+    } else {
+      print('Render error');
+    }
   }
 
   printCommand() {
@@ -345,6 +335,21 @@ class _UploadScreenState extends State<UploadScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _config.enableStatisticsCallback(this.statisticsCallback);
+    _cancelDio = new CancelToken();
+    _autoEdit = Autoedit(video: widget.video);
+    setState(() {
+      _msg = 'Getting directory ...';
+    });
+    _autoEdit.getDir().then((value) => startProcess());
+    setState(() {
+      _msg = 'Prepared directory';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: new AppBar(
@@ -353,7 +358,7 @@ class _UploadScreenState extends State<UploadScreen> {
             onPressed: () {
               _encoder.cancel();
               _cancelDio.cancel('cancelled');
-              Navigator.pop(context, true);
+              Navigator.pop(context, File(_autoEdit.outVideoDirPath));
             }),
         title: Text('Upload Screen'),
       ),
@@ -453,20 +458,20 @@ class _UploadScreenState extends State<UploadScreen> {
               SizedBox(
                 height: 20,
               ),
-              RaisedButton(
-                child: Text('Get Demo Command'),
-                onPressed: () {
-                  getDemoBtn();
-                },
-              ),
-              RaisedButton(
-                child: Text('Indicator'),
-                onPressed: () {
-                  setState(() {
-                    _serverProcessing = !_serverProcessing;
-                  });
-                },
-              ),
+//              RaisedButton(
+//                child: Text('Get Demo Command'),
+//                onPressed: () {
+//                  startProcess();
+//                },
+//              ),
+//              RaisedButton(
+//                child: Text('Indicator'),
+//                onPressed: () {
+//                  setState(() {
+//                    _serverProcessing = !_serverProcessing;
+//                  });
+//                },
+//              ),
 //              RaisedButton(
 //                child: Text('Reset'),
 //                onPressed: () {
@@ -491,16 +496,16 @@ class _UploadScreenState extends State<UploadScreen> {
 //              ),
               RaisedButton(
                 child: Text(_cancelDio.isCancelled ? 'Reset token' : 'Cancel'),
-                onPressed: () {
+                onPressed: () async {
+                  List list = await _encoder.listExecutions();
                   setState(() {
                     _progress = 0.0;
-                    if (_cancelDio.isCancelled) {
-                      _cancelDio = new CancelToken();
-                    } else {
-                      _cancelDio.cancel('cancelled');
-                    }
+                    _cancelDio.cancel('cancelled');
                     _cancelDio = new CancelToken();
-                    _encoder.cancel();
+                    if (list.length > 0) {
+                      _encoder.cancel();
+                    }
+                    Navigator.pop(context);
                   });
                 },
               ),
