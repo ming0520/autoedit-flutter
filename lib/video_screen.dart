@@ -170,6 +170,7 @@ class _VideoScreenState extends State<VideoScreen> {
         children: [
           Expanded(
             child: chewie == null ? _displayLoading() : chewie,
+//            child: _displayLoading(),
           ),
           RaisedButton(
               child: Text('Ok'),

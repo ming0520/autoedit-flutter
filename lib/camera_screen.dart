@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:autoedit/upload_screen.dart';
 import 'package:autoedit/video_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,6 +15,15 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   File _video;
   String msg;
+
+  final toast = Fluttertoast.showToast(
+      msg: "This is Center Short Toast",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0);
 
   _record({bool isRecord}) async {
     ImageSource imgSrc;
@@ -40,9 +49,9 @@ class _CameraScreenState extends State<CameraScreen> {
 //        AlbumSaver.createAlbum(albumName: "AutoEdit");
         GallerySaver.saveVideo(video.path, albumName: 'AutoEdit')
             .then((bool success) {
-          setState(() {
-            msg = 'video saved';
-          });
+//          setState(() {
+//            msg = 'video saved';
+//          });
         });
       }
 
@@ -77,10 +86,11 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Text(msg == null ? 'No video selected!' : msg),
-          ),
+//          Expanded(
+//            child: Text(msg == null ? 'No video selected!' : msg),
+//          ),
           RaisedButton(
             child: Center(
               child: Text('Import'),
@@ -99,27 +109,27 @@ class _CameraScreenState extends State<CameraScreen> {
               _record(isRecord: true);
             },
           ),
-          RaisedButton(
-              child: Center(
-                child: Text('Video Screen'),
-              ),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return VideoScreen(video: File(_video.path));
-                }));
-              }),
-          RaisedButton(
-            child: Center(
-              child: Text('Upload Screen'),
-            ),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return UploadScreen(
-                  video: File(_video.path),
-                );
-              }));
-            },
-          )
+//          RaisedButton(
+//              child: Center(
+//                child: Text('Video Screen'),
+//              ),
+//              onPressed: () {
+//                Navigator.push(context, MaterialPageRoute(builder: (context) {
+//                  return VideoScreen(video: File(_video.path));
+//                }));
+//              }),
+//          RaisedButton(
+//            child: Center(
+//              child: Text('Upload Screen'),
+//            ),
+//            onPressed: () {
+//              Navigator.push(context, MaterialPageRoute(builder: (context) {
+//                return UploadScreen(
+//                  video: File(_video.path),
+//                );
+//              }));
+//            },
+//          ),
         ],
       ),
     );
