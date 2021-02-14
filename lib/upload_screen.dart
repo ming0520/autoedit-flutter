@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:flutter_ffmpeg/media_information.dart';
 import 'package:flutter_ffmpeg/statistics.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -45,11 +47,19 @@ class Autoedit {
     this.extDir = await getExternalStorageDirectory();
     this.fileNameOnly = path.basenameWithoutExtension(video.path);
     this.outAudioDirPath = '${this.extDir.path}/${this.fileNameOnly}.wav';
-    this.outVideoDirPath = '${this.extDir.path}/${this.fileNameOnly}';
-    if (File(this.outVideoDirPath).existsSync()) {
-      this.outVideoDirPath += '_EDITED.mp4';
-    } else {
-      this.outVideoDirPath += '_EDITED_1.mp4';
+
+    this.outVideoDirPath =
+        '${this.extDir.path}/${this.fileNameOnly}_EDITED.mp4';
+
+    if (await File(this.outVideoDirPath).exists()) {
+      int counter = 1;
+      String noExtensions = '${this.extDir.path}/${this.fileNameOnly}_EDITED_';
+      String newPath = noExtensions + counter.toString() + '.mp4';
+      while (await File(newPath).exists()) {
+        counter++;
+        newPath = noExtensions + counter.toString() + '.mp4';
+      }
+      this.outVideoDirPath = newPath;
     }
     MediaInformation mediaInfo = await _ffprobe.getMediaInformation(video.path);
     Map<dynamic, dynamic> mp = mediaInfo.getAllProperties();
@@ -156,6 +166,27 @@ class _UploadScreenState extends State<UploadScreen> {
       startIndex += n;
       endIndex = startIndex + n;
     }
+  }
+
+  Future<void> deleteFile(File file) async {
+    try {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (e) {
+      // Error in getting access to the file.
+    }
+  }
+
+  _showToast(String message, Color color) {
+    Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: color,
+        textColor: Colors.white,
+        fontSize: 12.0);
   }
 
 //  Future<void> getAPI() async {
@@ -290,6 +321,7 @@ class _UploadScreenState extends State<UploadScreen> {
         _time = 0;
       });
       String arguments = _autoEdit.renderVideo();
+
       await _encoder.execute(arguments);
       setState(() {
 //        _msg = 'Saved to ${_autoEdit.outVideoDirPath}';
@@ -322,15 +354,21 @@ class _UploadScreenState extends State<UploadScreen> {
           '===============================Converted to wav =============================');
     });
     await getAPI();
+    await deleteFile(File(_autoEdit.outAudioDirPath));
     // await renderVideo();
     if (await File(_autoEdit.outVideoDirPath).exists()) {
-      Navigator.pop(context, File(_autoEdit.outVideoDirPath));
+      GallerySaver.saveVideo(_autoEdit.outVideoDirPath, albumName: 'AutoEdit')
+          .then((bool success) {
+        Navigator.pop(context, File(_autoEdit.outVideoDirPath));
+      });
     } else {
       print('Render error');
+      _showToast('Render error.', Colors.red);
     }
   }
 
   cancelAll() async {
+    _showToast('Cancelling ...', Colors.red);
     List list = await _encoder.listExecutions();
     setState(
       () {
@@ -340,9 +378,10 @@ class _UploadScreenState extends State<UploadScreen> {
         if (list.length > 0) {
           _encoder.cancel();
         }
-        Navigator.pop(context);
       },
     );
+    await deleteFile(File(_autoEdit.outAudioDirPath));
+    Navigator.pop(context);
   }
 
   printCommand() {
