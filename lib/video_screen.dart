@@ -116,6 +116,16 @@ class _VideoScreenState extends State<VideoScreen> {
     });
   }
 
+  Future<void> deleteFile(File file) async {
+    try {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (e) {
+      // Error in getting access to the file.
+    }
+  }
+
   @override
   void dispose() {
     chewieController.videoPlayerController.dispose();
@@ -124,6 +134,7 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   _uploadScreen() async {
+    chewieController.pause();
     File newVideo =
         await Navigator.push(context, MaterialPageRoute(builder: (context) {
       return UploadScreen(
@@ -133,6 +144,8 @@ class _VideoScreenState extends State<VideoScreen> {
     setState(() {
       if (newVideo.path != video.path) {
         _isNewVideo = true;
+        video = newVideo;
+//        _showToast('saved ' + video.path, Colors.green);
       } else {
         _isNewVideo = false;
       }
@@ -186,22 +199,26 @@ class _VideoScreenState extends State<VideoScreen> {
             child: chewie == null ? _displayLoading() : chewie,
 //            child: _displayLoading(),
           ),
+//          Text(video.path),
           RaisedButton(
             child: Text(_isNewVideo ? 'Done' : 'Ok'),
-            onPressed: () {
+            onPressed: () async {
               if (_isNewVideo) {
+//                _showToast('saved ' + video.path, Colors.green);
+                await deleteFile(File(video.path));
+                _showToast('Saved to gallery', Colors.green);
                 Navigator.pop(context);
               } else {
                 _uploadScreen();
               }
             },
           ),
-          RaisedButton(
-            child: Text('Test Toast'),
-            onPressed: () {
-              _showToast('saved', Colors.green);
-            },
-          )
+//          RaisedButton(
+//            child: Text('Test Toast'),
+//            onPressed: () {
+//              _showToast('saved ' + video.path, Colors.lightGreen);
+//            },
+//          )
         ],
       ),
     );
