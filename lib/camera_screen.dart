@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:autoedit/video_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -100,15 +99,15 @@ class _CameraScreenState extends State<CameraScreen> {
               _record(isRecord: true);
             },
           ),
-//          RaisedButton(
-//              child: Center(
-//                child: Text('Video Screen'),
-//              ),
-//              onPressed: () {
-//                Navigator.push(context, MaterialPageRoute(builder: (context) {
-//                  return VideoScreen(video: File(_video.path));
-//                }));
-//              }),
+          RaisedButton(
+              child: Center(
+                child: Text('Video Screen'),
+              ),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return VideoScreen(video: File(_video.path));
+                }));
+              }),
 //          RaisedButton(
 //            child: Center(
 //              child: Text('Upload Screen'),
