@@ -50,6 +50,7 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 //import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:video_player/video_player.dart';
 
@@ -69,12 +70,23 @@ class _VideoScreenState extends State<VideoScreen> {
   VideoPlayerController videoPlayerController;
   ChewieController chewieController;
   Chewie chewie;
-  bool _newVideo = false;
+  bool _isNewVideo = false;
 
   void initState() {
     this.video = widget.video;
     _loadVideo(this.video);
     super.initState();
+  }
+
+  _showToast(String message, Color color) {
+    Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: color,
+        textColor: Colors.white,
+        fontSize: 12.0);
   }
 
   _loadVideo(File video) async {
@@ -120,7 +132,9 @@ class _VideoScreenState extends State<VideoScreen> {
     }));
     setState(() {
       if (newVideo.path != video.path) {
-        _newVideo = true;
+        _isNewVideo = true;
+      } else {
+        _isNewVideo = false;
       }
       _loadVideo(newVideo);
     });
@@ -173,10 +187,21 @@ class _VideoScreenState extends State<VideoScreen> {
 //            child: _displayLoading(),
           ),
           RaisedButton(
-              child: Text('Ok'),
-              onPressed: () {
+            child: Text(_isNewVideo ? 'Done' : 'Ok'),
+            onPressed: () {
+              if (_isNewVideo) {
+                Navigator.pop(context);
+              } else {
                 _uploadScreen();
-              }),
+              }
+            },
+          ),
+          RaisedButton(
+            child: Text('Test Toast'),
+            onPressed: () {
+              _showToast('saved', Colors.green);
+            },
+          )
         ],
       ),
     );
