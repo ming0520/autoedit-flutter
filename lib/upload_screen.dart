@@ -45,8 +45,12 @@ class Autoedit {
     this.extDir = await getExternalStorageDirectory();
     this.fileNameOnly = path.basenameWithoutExtension(video.path);
     this.outAudioDirPath = '${this.extDir.path}/${this.fileNameOnly}.wav';
-    this.outVideoDirPath =
-        '${this.extDir.path}/${this.fileNameOnly}_EDITED.mp4';
+    this.outVideoDirPath = '${this.extDir.path}/${this.fileNameOnly}';
+    if (File(this.outVideoDirPath).existsSync()) {
+      this.outVideoDirPath += '_EDITED.mp4';
+    } else {
+      this.outVideoDirPath += '_EDITED_1.mp4';
+    }
     MediaInformation mediaInfo = await _ffprobe.getMediaInformation(video.path);
     Map<dynamic, dynamic> mp = mediaInfo.getAllProperties();
 
@@ -326,6 +330,21 @@ class _UploadScreenState extends State<UploadScreen> {
     }
   }
 
+  cancelAll() async {
+    List list = await _encoder.listExecutions();
+    setState(
+      () {
+        _progress = 0.0;
+        _cancelDio.cancel('cancelled');
+        _cancelDio = new CancelToken();
+        if (list.length > 0) {
+          _encoder.cancel();
+        }
+        Navigator.pop(context);
+      },
+    );
+  }
+
   printCommand() {
     logLongString(_autoEdit.command);
   }
@@ -354,12 +373,14 @@ class _UploadScreenState extends State<UploadScreen> {
     return Scaffold(
       appBar: new AppBar(
         leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              _encoder.cancel();
-              _cancelDio.cancel('cancelled');
-              Navigator.pop(context, File(_autoEdit.outVideoDirPath));
-            }),
+          icon: new Icon(Icons.arrow_back),
+          onPressed: cancelAll,
+          // onPressed: () {
+          //   _encoder.cancel();
+          //   _cancelDio.cancel('cancelled');
+          //   Navigator.pop(context, File(_autoEdit.outVideoDirPath));
+          // },
+        ),
         title: Text('Upload Screen'),
       ),
       body: new Column(
@@ -496,18 +517,21 @@ class _UploadScreenState extends State<UploadScreen> {
 //              ),
               RaisedButton(
                 child: Text(_cancelDio.isCancelled ? 'Reset token' : 'Cancel'),
-                onPressed: () async {
-                  List list = await _encoder.listExecutions();
-                  setState(() {
-                    _progress = 0.0;
-                    _cancelDio.cancel('cancelled');
-                    _cancelDio = new CancelToken();
-                    if (list.length > 0) {
-                      _encoder.cancel();
-                    }
-                    Navigator.pop(context);
-                  });
-                },
+                onPressed: cancelAll,
+                // onPressed: () async {
+                //   List list = await _encoder.listExecutions();
+                //   setState(
+                //     () {
+                //       _progress = 0.0;
+                //       _cancelDio.cancel('cancelled');
+                //       _cancelDio = new CancelToken();
+                //       if (list.length > 0) {
+                //         _encoder.cancel();
+                //       }
+                //       Navigator.pop(context);
+                //     },
+                //   );
+                // },
               ),
             ],
           ),
