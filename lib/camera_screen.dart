@@ -16,15 +16,6 @@ class _CameraScreenState extends State<CameraScreen> {
   File _video;
   String msg;
 
-  final toast = Fluttertoast.showToast(
-      msg: "This is Center Short Toast",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
-      timeInSecForIosWeb: 1,
-      backgroundColor: Colors.red,
-      textColor: Colors.white,
-      fontSize: 16.0);
-
   _record({bool isRecord}) async {
     ImageSource imgSrc;
     if (isRecord) {
