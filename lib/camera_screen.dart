@@ -15,6 +15,11 @@ class _CameraScreenState extends State<CameraScreen> {
   File _video;
   String msg;
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   _record({bool isRecord}) async {
     ImageSource imgSrc;
     if (isRecord) {
@@ -99,15 +104,15 @@ class _CameraScreenState extends State<CameraScreen> {
               _record(isRecord: true);
             },
           ),
-          RaisedButton(
-              child: Center(
-                child: Text('Video Screen'),
-              ),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return VideoScreen(video: File(_video.path));
-                }));
-              }),
+//          RaisedButton(
+//              child: Center(
+//                child: Text('Video Screen'),
+//              ),
+//              onPressed: () {
+//                Navigator.push(context, MaterialPageRoute(builder: (context) {
+//                  return VideoScreen(video: File(_video.path));
+//                }));
+//              }),
 //          RaisedButton(
 //            child: Center(
 //              child: Text('Upload Screen'),
